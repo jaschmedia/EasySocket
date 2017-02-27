@@ -1,7 +1,10 @@
 package me.Jasch.EasySocket.WebSocket;
 
 /**
- * Created by jasch on 26/02/17.
+ * Enum to keep track of the state of a connection.
+ * @author jasch
+ * @version 0.1.0
+ * @since 0.1.0
  */
 public enum ConnectionState {
     NOTINIT, // connection not inited

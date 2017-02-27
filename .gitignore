@@ -1,3 +1,7 @@
-.idea
-target
+# IntelliJ
+.idea/
 EasySocket.iml
+
+# Maven
+target/
+dependency-reduced-pom.xml

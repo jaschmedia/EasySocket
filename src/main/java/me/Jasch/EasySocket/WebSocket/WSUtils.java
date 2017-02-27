@@ -4,13 +4,13 @@ import me.Jasch.EasySocket.Exceptions.InvalidMTypeException;
 import me.Jasch.EasySocket.Exceptions.NoConnectionIDException;
 import me.Jasch.EasySocket.MType.MType;
 import me.Jasch.EasySocket.MType.MTypeUtils;
-import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.java_websocket.WebSocket;
 
 import java.util.HashMap;
 
 /**
+ * Utility functions for the WebSocket server.
  * @author jasch
  * @version 0.1.0
  * @since 0.1.0
@@ -39,6 +39,12 @@ public class WSUtils {
         return cID;
     }
 
+    /**
+     * Checks if a sent ACK message for a CIS message is valid.
+     * @param msg The received message.
+     * @param ws The affected WebSocket
+     * @return true if successful, otherwise false.
+     */
     public Boolean checkCISACK(String msg, WebSocket ws) {
         Boolean state = false;
 

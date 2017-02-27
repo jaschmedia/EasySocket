@@ -6,7 +6,8 @@
     <packaging>jar</packaging>
     <version>0.1.0</version>
     <name>EasySocket</name>
-    <url>http://maven.apache.org</url>
+    <description>A wrapper around WebSocket to simplify communication planned in other projects.</description>
+    <url>https://github.com/jaschmedia/EasySocket</url>
 
     <dependencies>
         <dependency>
