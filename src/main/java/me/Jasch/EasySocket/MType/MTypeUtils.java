@@ -4,6 +4,7 @@ import me.Jasch.EasySocket.Exceptions.InvalidMTypeException;
 import me.Jasch.EasySocket.Exceptions.NoConnectionIDException;
 import org.java_websocket.WebSocket;
 import org.java_websocket.WebSocketImpl;
+import org.jetbrains.annotations.Contract;
 
 import java.util.HashMap;
 
@@ -21,7 +22,7 @@ public final class MTypeUtils {
 
         // add all MType into the mapping.
         for (MType mt: MType.values()) {
-            mTKeys.put(mt.getDiscrminator(), mt);
+            mTKeys.put(mt.discriminator, mt);
         }
     }
 
@@ -42,8 +43,9 @@ public final class MTypeUtils {
      * @param reason The error reason.
      * @return The message to be sent.
      */
+    @Contract(pure = true)
     public static String error(String reason) {
-        return MType.ERR.getDiscrminator() + reason;
+        return MType.ERR.discriminator + reason;
     }
 
     /**
@@ -52,8 +54,9 @@ public final class MTypeUtils {
      * @param cID The affect connection ID.
      * @return The message to be sent.
      */
+    @Contract(pure = true)
     public static String error(String reason, String cID) {
-        return MType.ERR.getDiscrminator() + cID + reason;
+        return MType.ERR.discriminator + cID + reason;
     }
 
     /**
@@ -61,18 +64,19 @@ public final class MTypeUtils {
      * @param cID The connection ID.
      * @return The message to be sent.
      */
+    @Contract(pure = true)
     public static String connectionIdSet(String cID) {
-        return MType.CIS + cID;
+        return MType.CIS.discriminator + cID;
     }
 
     /**
      * Returns the message type of the message.
      * @param msg The message.
      * @return The type.
-     * @throws InvalidMTypeException
+     * @throws InvalidMTypeException Thrown if the message does not contain a proper message type indicator.
      */
     public static MType getMessageType(String msg) throws InvalidMTypeException {
-        String mt = null;
+        String mt;
         try {
             mt = msg.substring(0,3);
         } catch (Exception e) {
@@ -88,7 +92,7 @@ public final class MTypeUtils {
      * @throws NoConnectionIDException If there is an error while trying to get the ID.
      */
     public static String getConnectionId(String msg) throws NoConnectionIDException {
-        String cID = null;
+        String cID;
         try {
             cID = msg.substring(3,11);
         } catch (Exception e) {

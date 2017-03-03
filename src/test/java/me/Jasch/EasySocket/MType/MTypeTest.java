@@ -10,15 +10,15 @@ import static org.junit.Assert.assertEquals;
 public class MTypeTest {
     @Test
     public void testDiscriminators() {
-        assertEquals("ACK", "ACK", MType.ACK.getDiscrminator());
-        assertEquals("NAC", "NAC", MType.NAC.getDiscrminator());
-        assertEquals("ATH", "ATH", MType.ATH.getDiscrminator());
-        assertEquals("ERR", "ERR", MType.ERR.getDiscrminator());
-        assertEquals("CIS", "CIS", MType.CIS.getDiscrminator());
-        assertEquals("PRT", "PRT", MType.PRT.getDiscrminator());
-        assertEquals("RTL", "RTL", MType.RTL.getDiscrminator());
-        assertEquals("PNG", "PNG", MType.PNG.getDiscrminator());
-        assertEquals("POG", "POG", MType.POG.getDiscrminator());
-        assertEquals("EVT", "EVT", MType.EVT.getDiscrminator());
+        assertEquals("ACK", "ACK", MType.ACK.discriminator);
+        assertEquals("NAC", "NAC", MType.NAC.discriminator);
+        assertEquals("ATH", "ATH", MType.ATH.discriminator);
+        assertEquals("ERR", "ERR", MType.ERR.discriminator);
+        assertEquals("CIS", "CIS", MType.CIS.discriminator);
+        assertEquals("PRT", "PRT", MType.PRT.discriminator);
+        assertEquals("RTL", "RTL", MType.RTL.discriminator);
+        assertEquals("PNG", "PNG", MType.PNG.discriminator);
+        assertEquals("POG", "POG", MType.POG.discriminator);
+        assertEquals("EVT", "EVT", MType.EVT.discriminator);
     }
 }
