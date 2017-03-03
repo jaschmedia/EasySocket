@@ -2,9 +2,8 @@ package me.Jasch.EasySocket.MType;
 
 import me.Jasch.EasySocket.Exceptions.InvalidMTypeException;
 import me.Jasch.EasySocket.Exceptions.NoConnectionIDException;
-import org.java_websocket.WebSocket;
-import org.java_websocket.WebSocketImpl;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 
@@ -32,6 +31,7 @@ public final class MTypeUtils {
      * @return The message type as {@link MType}.
      * @throws InvalidMTypeException If the given message type is invalid or doesn't exist.
      */
+    @NotNull
     public static MType getMType(String ts) throws InvalidMTypeException {
         MType mt = mTKeys.get(ts);
         if (mt == null) throw new InvalidMTypeException(String.format("The string: \"%s\" is not a valid type.", ts));
@@ -43,6 +43,7 @@ public final class MTypeUtils {
      * @param reason The error reason.
      * @return The message to be sent.
      */
+    @NotNull
     @Contract(pure = true)
     public static String error(String reason) {
         return MType.ERR.discriminator + reason;
@@ -54,6 +55,7 @@ public final class MTypeUtils {
      * @param cID The affect connection ID.
      * @return The message to be sent.
      */
+    @NotNull
     @Contract(pure = true)
     public static String error(String reason, String cID) {
         return MType.ERR.discriminator + cID + reason;
@@ -64,6 +66,7 @@ public final class MTypeUtils {
      * @param cID The connection ID.
      * @return The message to be sent.
      */
+    @NotNull
     @Contract(pure = true)
     public static String connectionIdSet(String cID) {
         return MType.CIS.discriminator + cID;
@@ -75,6 +78,7 @@ public final class MTypeUtils {
      * @return The type.
      * @throws InvalidMTypeException Thrown if the message does not contain a proper message type indicator.
      */
+    @NotNull
     public static MType getMessageType(String msg) throws InvalidMTypeException {
         String mt;
         try {

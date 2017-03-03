@@ -8,6 +8,7 @@ This is the initial development of EasySocket.
 * Changelogs (yes, this is somewhat meta)
 * Message Types and related utility functions
 * Connections (WIP)
+* Connections: connection ID system in place
 
 ## Changed
 
