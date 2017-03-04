@@ -9,6 +9,7 @@ This is the initial development of EasySocket.
 * Message Types and related utility functions
 * Connections (WIP)
 * Connections: connection ID system in place
+* Connections: protocol system (server) in place
 
 ## Changed
 

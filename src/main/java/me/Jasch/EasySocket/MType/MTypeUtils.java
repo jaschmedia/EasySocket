@@ -73,6 +73,18 @@ public final class MTypeUtils {
     }
 
     /**
+     * Creates a protocol message.
+     * @param cID Affected Connection ID.
+     * @param protocolName Protocol name.
+     * @return The message to be sent.
+     */
+    @NotNull
+    @Contract(pure = true)
+    public static String protocolMessage(String cID, String protocolName) {
+        return MType.PRT.discriminator + cID + protocolName;
+    }
+
+    /**
      * Returns the message type of the message.
      * @param msg The message.
      * @return The type.
@@ -103,5 +115,21 @@ public final class MTypeUtils {
             throw new NoConnectionIDException();
         }
         return cID;
+    }
+
+    /**
+     * Returns the payload of a message.
+     * @param msg The message.
+     * @return The payload of the message, or an empty string if retrieving the payload failed.
+     */
+    @NotNull
+    public static String getMessagePayload(String msg) {
+        String payload;
+        try {
+            payload = msg.substring(11,msg.length());
+        } catch (Exception e) {
+            payload = "";
+        }
+        return payload;
     }
 }

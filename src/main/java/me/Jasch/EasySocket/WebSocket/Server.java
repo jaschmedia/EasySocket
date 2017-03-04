@@ -19,9 +19,11 @@ import java.util.HashMap;
 public class Server extends WebSocketServer {
 
     public static HashMap<String, Connection> conns = new HashMap<>(); // connection, identified by their connection ID.
+    private String protocolName;
 
-    public Server(InetSocketAddress adr) {
+    public Server(InetSocketAddress adr, String protocolName) {
         super(adr);
+        this.protocolName = protocolName;
     }
 
     @Override
@@ -54,11 +56,12 @@ public class Server extends WebSocketServer {
             case ACK:
                 // deal with connection ID ACKs
                 try {
-                    if (WSUtils.checkCISACK(message, conn)) {
+                    if (WSUtils.checkCISACK(message)) {
                         String cID = MTypeUtils.getConnectionId(message);
                         if (conns.containsKey(cID)) {
                             conns.get(cID).setState(ConnectionState.CIDACK);
                             // TODO: call protocol communication functions.
+                            WSUtils.sendProtocolInformation(conn, cID, this.protocolName);
                             break; // We are done here.
                         } else {
                             throw new UnknownConnectionIDException();
@@ -103,7 +106,21 @@ public class Server extends WebSocketServer {
                 }
                 break;
             case PRT:
-                // TODO: Implement protocol communication.
+                try {
+                    if (WSUtils.checkPRTInformation(message, this.protocolName)) {
+                        String cID = MTypeUtils.getConnectionId(message);
+                        if (conns.containsKey(cID)) {
+                            conns.get(cID).setState(ConnectionState.PRTACK);
+                            // TODO: what happens now?!?!
+                            break; // we are done here.
+                        } else {
+                            throw new UnknownConnectionIDException();
+                        }
+                    }
+                } catch (NoConnectionIDException | UnknownConnectionIDException e) {
+                    WSUtils.terminateConnection(conn); // Terminate the connection and then quit.
+                    break;
+                }
                 break;
             case RTL:
                 // Not implemented.
