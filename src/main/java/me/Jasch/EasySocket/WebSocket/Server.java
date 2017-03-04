@@ -6,6 +6,8 @@ import me.Jasch.EasySocket.MType.MTypeUtils;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -18,16 +20,21 @@ import java.util.HashMap;
  */
 public class Server extends WebSocketServer {
 
+    private static final Logger log = LoggerFactory.getLogger(Server.class); // logger instance
     public static HashMap<String, Connection> conns = new HashMap<>(); // connection, identified by their connection ID.
     private String protocolName;
 
     public Server(InetSocketAddress adr, String protocolName) {
         super(adr);
         this.protocolName = protocolName;
+        if (log.isDebugEnabled()) { log.debug("WebSocket server initialised."); }
     }
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
+        if (log.isDebugEnabled()) {
+            log.debug("Connection opened. Remote: {}", conn.getRemoteSocketAddress().getAddress().getHostAddress());
+        }
         String cID = WSUtils.generateConnectionId();
         Connection cn = new Connection(cID, conn);
         conns.put(cID, cn);
@@ -37,6 +44,10 @@ public class Server extends WebSocketServer {
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
+        if (log.isDebugEnabled()) {
+            log.debug("Connection closed. Code: {}, Remote: {}", code,
+                    conn.getRemoteSocketAddress().getAddress().getHostAddress());
+        }
 
     }
 
@@ -46,6 +57,8 @@ public class Server extends WebSocketServer {
         try {
             mt = MTypeUtils.getMessageType(message);
         } catch (InvalidMTypeException e) {
+            log.warn("Invalid MType. Remote: {}, Message: {}",
+                    conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
             // TODO: improve the way errors are handled.
             WSUtils.terminateConnection(conn);
             return;
@@ -55,12 +68,15 @@ public class Server extends WebSocketServer {
         switch (mt) {
             case ACK:
                 // deal with connection ID ACKs
+                if (log.isDebugEnabled()) {
+                    log.debug("ACK received. Remote: {}, Message: {}",
+                            conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
+                }
                 try {
                     if (WSUtils.checkCISACK(message)) {
                         String cID = MTypeUtils.getConnectionId(message);
                         if (conns.containsKey(cID)) {
                             conns.get(cID).setState(ConnectionState.CIDACK);
-                            // TODO: call protocol communication functions.
                             WSUtils.sendProtocolInformation(conn, cID, this.protocolName);
                             break; // We are done here.
                         } else {
@@ -76,11 +92,21 @@ public class Server extends WebSocketServer {
                 break;
             case NAC:
                 // Not implemented.
+                if (log.isInfoEnabled()) {
+                    log.info("NAC received (NOT IMPLEMENTED). Remote: {}, Message: {}",
+                            conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
+                }
                 break;
             case ATH:
                 // Not implemented.
+                if (log.isInfoEnabled()) {
+                    log.info("ATH received (NOT IMPLEMENTED). Remote: {}, Message: {}",
+                            conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
+                }
                 break;
             case ERR:
+                log.warn("ERR received. Remote: {}, Message: {}",
+                        conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
                 // Closes the WebSocket connection and removes it from the list.
                 // TODO: Improved error handling.
                 try {
@@ -94,6 +120,7 @@ public class Server extends WebSocketServer {
                 }
                 break;
             case CIS:
+                log.debug("CIS recieved: ", message);
                 // This should never be sent by a client.
                 try {
                     String cID = MTypeUtils.getConnectionId(message);
@@ -106,6 +133,10 @@ public class Server extends WebSocketServer {
                 }
                 break;
             case PRT:
+                if (log.isDebugEnabled()) {
+                    log.debug("PRT received. Remote: {}, Message: {}",
+                            conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
+                }
                 try {
                     if (WSUtils.checkPRTInformation(message, this.protocolName)) {
                         String cID = MTypeUtils.getConnectionId(message);
@@ -124,12 +155,24 @@ public class Server extends WebSocketServer {
                 break;
             case RTL:
                 // Not implemented.
+                if (log.isInfoEnabled()) {
+                    log.info("RTL received (NOT IMPLEMENTED). Remote: {}, Message: {}",
+                            conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
+                }
                 break;
             case PNG:
                 // Not implemented.
+                if (log.isInfoEnabled()) {
+                    log.info("PNG received (NOT IMPLEMENTED). Remote: {}, Message: {}",
+                            conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
+                }
                 break;
             case POG:
                 // Not implemented.
+                if (log.isInfoEnabled()) {
+                    log.info("POG received (NOT IMPLEMENTED). Remote: {}, Message: {}",
+                            conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
+                }
                 break;
             case EVT:
                 // TODO: Implement event system.
@@ -140,6 +183,6 @@ public class Server extends WebSocketServer {
 
     @Override
     public void onError(WebSocket conn, Exception ex) {
-
+        log.error("Apparently an error occurred: {}", ex);
     }
 }

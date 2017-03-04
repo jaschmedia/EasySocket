@@ -4,7 +4,6 @@ import me.Jasch.EasySocket.Exceptions.InvalidMTypeException;
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
 
-import static java.lang.Math.random;
 import static org.junit.Assert.assertEquals;
 
 /**

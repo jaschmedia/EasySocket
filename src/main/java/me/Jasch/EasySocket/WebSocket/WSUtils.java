@@ -5,6 +5,8 @@ import me.Jasch.EasySocket.MType.MTypeUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.java_websocket.WebSocket;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 
@@ -15,6 +17,8 @@ import java.util.HashMap;
  * @since 0.1.0
  */
 public class WSUtils {
+
+    private static final Logger log = LoggerFactory.getLogger(WSUtils.class); // logger instance
 
     /**
      * Generates a unique, 8 character alphanumeric ID for a connection.
@@ -37,6 +41,7 @@ public class WSUtils {
         do {
             cID = RandomStringUtils.randomAlphanumeric(8);
         } while (chm.containsKey(cID));
+        if (log.isDebugEnabled()) {log.debug("Generated connection ID: {}", cID);}
         return cID;
     }
 
@@ -79,6 +84,9 @@ public class WSUtils {
      * @param ws The affected WebSocket.
      */
     public static void terminateConnection(WebSocket ws) {
+        if (log.isDebugEnabled()) {
+            log.debug("Terminating connection. Remote: {}", ws.getRemoteSocketAddress().getAddress().getHostAddress());
+        }
         String msg = MTypeUtils.error("GENERIC");
         ws.send(msg);
         ws.close();

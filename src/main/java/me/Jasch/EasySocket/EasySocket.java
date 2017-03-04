@@ -1,5 +1,7 @@
 package me.Jasch.EasySocket;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import me.Jasch.EasySocket.WebSocket.Server;
 
 import java.net.InetSocketAddress;
@@ -11,6 +13,9 @@ import java.net.InetSocketAddress;
  * @since 0.1.0
  */
 public class EasySocket {
+
+    private static final Logger log = LoggerFactory.getLogger(EasySocket.class); // logger instance
+
     Server wsS; // the used WebSocket server.
     /**
      * The identifier of the protocol used.
@@ -29,9 +34,13 @@ public class EasySocket {
     }
 
     public void startServer() {
-        this.wsAddress = new InetSocketAddress("localhost", 8000);
-        this.wsS = new Server(this.wsAddress, "testabc");
+        String adr = "localhost";
+        int port = 8000;
+        protocolName = "testabc";
+        this.wsAddress = new InetSocketAddress(adr, port);
+        this.wsS = new Server(this.wsAddress, protocolName);
         this.wsS.start();
+        log.info("EasySocket started. Address: {}, Protocol: {}", (adr + ":" + port), protocolName);
     }
 
 

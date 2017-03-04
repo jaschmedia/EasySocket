@@ -7,6 +7,7 @@ This is the initial development of EasySocket.
 * License statement and related things
 * Changelogs (yes, this is somewhat meta)
 * Message Types and related utility functions
+* Logging functionality
 * Connections (WIP)
 * Connections: connection ID system in place
 * Connections: protocol system (server) in place

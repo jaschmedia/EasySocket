@@ -1,7 +1,5 @@
 package me.Jasch.EasySocket.Exceptions;
 
-import java.net.UnknownHostException;
-
 /**
  * Thrown if a received connection ID is not known to the server.
  * @author jasch

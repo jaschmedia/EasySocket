@@ -1,7 +1,5 @@
 package me.Jasch.EasySocket.MType;
 
-import org.jetbrains.annotations.Contract;
-
 /**
  * Possible types of messages sent over the WebSocket.
  * @author jasch
