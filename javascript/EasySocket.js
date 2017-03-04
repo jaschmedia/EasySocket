@@ -43,7 +43,7 @@
          */
         EasySocket.handleCIS = function (event) {
             EasySocket.CIS = event.data.substring(3,11);
-            EasySocket.ws.send("ACK" + EasySocket.CIS);
+            EasySocket.ws.send("CIS" + EasySocket.CIS);
         };
 
         /**

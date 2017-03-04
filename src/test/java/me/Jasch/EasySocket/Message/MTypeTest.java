@@ -1,4 +1,4 @@
-package me.Jasch.EasySocket.MType;
+package me.Jasch.EasySocket.Message;
 
 import org.junit.Test;
 

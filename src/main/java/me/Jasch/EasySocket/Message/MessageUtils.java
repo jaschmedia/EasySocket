@@ -1,4 +1,4 @@
-package me.Jasch.EasySocket.MType;
+package me.Jasch.EasySocket.Message;
 
 import me.Jasch.EasySocket.Exceptions.InvalidMTypeException;
 import me.Jasch.EasySocket.Exceptions.NoConnectionIDException;
@@ -13,7 +13,7 @@ import java.util.HashMap;
  * @version 0.1.0
  * @since 0.1.0
  */
-public final class MTypeUtils {
+public final class MessageUtils {
 
     private final static HashMap<String, MType> mTKeys = new HashMap<>(); // mapping String->Type for message types.
 

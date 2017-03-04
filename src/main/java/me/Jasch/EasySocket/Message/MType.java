@@ -1,4 +1,4 @@
-package me.Jasch.EasySocket.MType;
+package me.Jasch.EasySocket.Message;
 
 /**
  * Possible types of messages sent over the WebSocket.
@@ -23,7 +23,7 @@ public enum MType {
     POG("POG"), // pong - NOT IMPLEMENTED
     EVT("EVT"),; // event
 
-    final String discriminator;
+    public final String discriminator;
 
     MType(String discriminator) {
         this.discriminator = discriminator;

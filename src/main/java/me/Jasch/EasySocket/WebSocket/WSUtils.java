@@ -1,7 +1,8 @@
 package me.Jasch.EasySocket.WebSocket;
 
 import me.Jasch.EasySocket.Exceptions.*;
-import me.Jasch.EasySocket.MType.MTypeUtils;
+import me.Jasch.EasySocket.Message.MType;
+import me.Jasch.EasySocket.Message.Message;
 import org.apache.commons.lang.RandomStringUtils;
 import org.java_websocket.WebSocket;
 import org.jetbrains.annotations.NotNull;
@@ -46,37 +47,19 @@ public class WSUtils {
     }
 
     /**
-     * Checks if a sent ACK message for a CIS message is valid.
+     * Checks the answer for a CIS message.
      * @param msg The received message.
-     * @return true if valid CISACK, false if not.
-     * @throws NoConnectionIDException Thrown if message does not contain a connection ID.
+     * @return True if the connection ID was set correctly, false otherwise.
      * @throws UnknownConnectionIDException Thrown if the received connection ID is unknown.
      */
     @NotNull
-    public static Boolean checkCISACK(String msg) throws
-            NoConnectionIDException, UnknownConnectionIDException {
-
-        // Boolean container
-        Boolean isCisAck = false;
-
-        // get connection ID
-        String cID;
-        cID = MTypeUtils.getConnectionId(msg);
-
-
+    public static Boolean checkCISInformation(Message msg) throws UnknownConnectionIDException {
         // Return null if supplied cID is not known.
-        if (!Server.conns.containsKey(cID)) {
-            throw new UnknownConnectionIDException();
-        }
+        if (!Server.conns.containsKey(msg.cID)) { throw new UnknownConnectionIDException();}
 
-        Connection c = Server.conns.get(cID);
+        Connection c = Server.conns.get(msg.cID);
 
-        // If the given cID is not awaiting an ACK for a CIS terminate
-        if (c.getState() == ConnectionState.CIDSENT) {
-            isCisAck = true;
-        }
-
-        return isCisAck;
+        return (c.getState() == ConnectionState.CIDSENT);
     }
 
     /**
@@ -87,8 +70,6 @@ public class WSUtils {
         if (log.isDebugEnabled()) {
             log.debug("Terminating connection. Remote: {}", ws.getRemoteSocketAddress().getAddress().getHostAddress());
         }
-        String msg = MTypeUtils.error("GENERIC");
-        ws.send(msg);
         ws.close();
     }
 
@@ -98,8 +79,8 @@ public class WSUtils {
      * @param cID The affected connection ID.
      */
     public static void terminateConnection(WebSocket ws, String cID) {
-        String msg = MTypeUtils.error("GENERIC", cID);
-        ws.send(msg);
+        Message msg = new Message(MType.ERR, cID, "GenericError");
+        ws.send(msg.toString());
         ws.close();
         if (Server.conns.containsKey(cID)) {
             Server.conns.remove(cID);
@@ -113,8 +94,8 @@ public class WSUtils {
      * @param protocolName The protocol name.
      */
     public static void sendProtocolInformation(WebSocket ws, String cID, String protocolName) {
-        String msg = MTypeUtils.protocolMessage(cID, protocolName);
-        ws.send(msg);
+        Message msg = new Message(MType.PRT, cID, protocolName);
+        ws.send(msg.toString());
         if (Server.conns.containsKey(cID)) {
             Server.conns.get(cID).setState(ConnectionState.PRTSENT);
         }
@@ -122,33 +103,19 @@ public class WSUtils {
 
     /**
      * Checks if the returned protocol information is good.
-     * @param msg The recieved message.
+     * @param msg The received message.
      * @param protocolName The expected protocol name.
-     * @return True if the recieved protocol information matches the expected information.
-     * @throws NoConnectionIDException Thrown if message does not contain a connection ID.
+     * @return True if the received protocol information matches the expected information.
      * @throws UnknownConnectionIDException Thrown if the received connection ID is unknown.
      */
     @NotNull
-    public static Boolean checkPRTInformation(String msg, String protocolName) throws
+    public static Boolean checkPRTInformation(Message msg, String protocolName) throws
             NoConnectionIDException, UnknownConnectionIDException {
-        Boolean isPRTACK = false;
+        // Throw exception if connection ID is unknown.
+        if (!Server.conns.containsKey(msg.cID)) { throw new UnknownConnectionIDException(); }
 
-        // get connection ID
-        String cID;
-        cID = MTypeUtils.getConnectionId(msg);
+        Connection c = Server.conns.get(msg.cID);
 
-        // Return null if supplied cID is not known.
-        if (!Server.conns.containsKey(cID)) {
-            throw new UnknownConnectionIDException();
-        }
-
-        Connection c = Server.conns.get(cID);
-
-        // If the given cID is not awaiting an ACK for a CIS terminate
-        if (c.getState() == ConnectionState.PRTSENT) {
-            isPRTACK = MTypeUtils.getMessagePayload(msg).equals(protocolName);
-        }
-
-        return isPRTACK;
+        return c.getState() == ConnectionState.PRTSENT && msg.payload.equals(protocolName);
     }
 }

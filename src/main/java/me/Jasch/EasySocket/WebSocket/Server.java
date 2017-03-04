@@ -1,8 +1,8 @@
 package me.Jasch.EasySocket.WebSocket;
 
 import me.Jasch.EasySocket.Exceptions.*;
-import me.Jasch.EasySocket.MType.MType;
-import me.Jasch.EasySocket.MType.MTypeUtils;
+import me.Jasch.EasySocket.Message.MType;
+import me.Jasch.EasySocket.Message.Message;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -38,7 +38,8 @@ public class Server extends WebSocketServer {
         String cID = WSUtils.generateConnectionId();
         Connection cn = new Connection(cID, conn);
         conns.put(cID, cn);
-        conn.send(MTypeUtils.connectionIdSet(cID));
+        Message msg = new Message(MType.CIS, cID);
+        conn.send(msg.toString());
         cn.setState(ConnectionState.CIDSENT);
     }
 
@@ -53,99 +54,81 @@ public class Server extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        MType mt;
+        Message msg;
         try {
-            mt = MTypeUtils.getMessageType(message);
-        } catch (InvalidMTypeException e) {
-            log.warn("Invalid MType. Remote: {}, Message: {}",
+            msg = new Message(message);
+        } catch (InvalidMTypeException | NoConnectionIDException e) {
+            log.warn("Malformed message. Remote: {}, Message: {}",
                     conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
-            // TODO: improve the way errors are handled.
-            WSUtils.terminateConnection(conn);
+            // TODO: Deal with malformed message.
             return;
         }
 
-        // handle the message.
-        switch (mt) {
-            case ACK:
-                // deal with connection ID ACKs
-                if (log.isDebugEnabled()) {
-                    log.debug("ACK received. Remote: {}, Message: {}",
-                            conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
-                }
-                try {
-                    if (WSUtils.checkCISACK(message)) {
-                        String cID = MTypeUtils.getConnectionId(message);
-                        if (conns.containsKey(cID)) {
-                            conns.get(cID).setState(ConnectionState.CIDACK);
-                            WSUtils.sendProtocolInformation(conn, cID, this.protocolName);
-                            break; // We are done here.
-                        } else {
-                            throw new UnknownConnectionIDException();
-                        }
-                    }
-                } catch ( NoConnectionIDException | UnknownConnectionIDException e) {
-                    WSUtils.terminateConnection(conn); // Terminate the connection and then quit.
-                    break;
-                }
+        //<editor-fold desc="Log incoming messages.">
+        switch (msg.mt) {
 
-
-                break;
-            case NAC:
-                // Not implemented.
-                if (log.isInfoEnabled()) {
-                    log.info("NAC received (NOT IMPLEMENTED). Remote: {}, Message: {}",
-                            conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
-                }
-                break;
-            case ATH:
-                // Not implemented.
-                if (log.isInfoEnabled()) {
-                    log.info("ATH received (NOT IMPLEMENTED). Remote: {}, Message: {}",
-                            conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
-                }
-                break;
             case ERR:
                 log.warn("ERR received. Remote: {}, Message: {}",
                         conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
+                break;
+            case CIS: case PRT: case EVT:
+                if (log.isDebugEnabled()) {
+                    log.debug("{} received. Remote: {}, Message: {}", msg.mt.discriminator,
+                            conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
+                }
+                break;
+            default:
+                if (log.isInfoEnabled()) {
+                    log.info("{} received. Remote: {}, Message: {}", msg.mt.discriminator,
+                            conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
+                }
+                break;
+        }
+        //</editor-fold>
+
+        // handle the message.
+        switch (msg.mt) {
+            case ACK:
+                break;
+            case NAC:
+                // Not implemented.
+                break;
+            case ATH:
+                // Not implemented.
+                break;
+            case ERR:
+                // TODO: improved error handling.
                 // Closes the WebSocket connection and removes it from the list.
-                // TODO: Improved error handling.
-                try {
-                    String cID = MTypeUtils.getConnectionId(message);
-                    conn.close();
-                    if (conns.containsKey(cID)) {
-                        conns.remove(cID);
-                    }
-                } catch (NoConnectionIDException e) {
-                    conn.close();
+                Message sendMsg = new Message(MType.ERR, msg.cID, "GenericError");
+                conn.send(sendMsg.toString());
+                conn.close();
+                if (conns.containsKey(msg.cID)) {
+                    conns.remove(msg.cID);
                 }
                 break;
             case CIS:
-                log.debug("CIS recieved: ", message);
-                // This should never be sent by a client.
                 try {
-                    String cID = MTypeUtils.getConnectionId(message);
-                    WSUtils.terminateConnection(conn, cID);
-                    if (conns.containsKey(cID)) {
-                        conns.remove(cID);
+                    if (WSUtils.checkCISInformation(msg)) {
+                        conns.get(msg.cID).setState(ConnectionState.CIDACK);
+                        WSUtils.sendProtocolInformation(conn, msg.cID, this.protocolName);
+                    } else {
+                        // TODO: more graceful handling of a failed CIS handshake.
+                        WSUtils.terminateConnection(conn);
                     }
-                } catch (NoConnectionIDException e) {
-                    WSUtils.terminateConnection(conn);
+                } catch ( UnknownConnectionIDException e) {
+                    WSUtils.terminateConnection(conn); // Terminate the connection and then quit.
+                    break;
                 }
                 break;
             case PRT:
-                if (log.isDebugEnabled()) {
-                    log.debug("PRT received. Remote: {}, Message: {}",
-                            conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
-                }
                 try {
-                    if (WSUtils.checkPRTInformation(message, this.protocolName)) {
-                        String cID = MTypeUtils.getConnectionId(message);
-                        if (conns.containsKey(cID)) {
-                            conns.get(cID).setState(ConnectionState.PRTACK);
-                            // TODO: what happens now?!?!
-                            break; // we are done here.
-                        } else {
-                            throw new UnknownConnectionIDException();
+                    if (WSUtils.checkPRTInformation(msg, this.protocolName)) {
+                        conns.get(msg.cID).setState(ConnectionState.PRTACK);
+                    } else {
+                        // TODO: more graceful handling of a failed PRT handshake.
+                        WSUtils.terminateConnection(conn, msg.cID);
+                        if (conns.containsKey(msg.cID)) {
+                            conns.remove(msg.cID);
                         }
                     }
                 } catch (NoConnectionIDException | UnknownConnectionIDException e) {
@@ -155,24 +138,12 @@ public class Server extends WebSocketServer {
                 break;
             case RTL:
                 // Not implemented.
-                if (log.isInfoEnabled()) {
-                    log.info("RTL received (NOT IMPLEMENTED). Remote: {}, Message: {}",
-                            conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
-                }
                 break;
             case PNG:
                 // Not implemented.
-                if (log.isInfoEnabled()) {
-                    log.info("PNG received (NOT IMPLEMENTED). Remote: {}, Message: {}",
-                            conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
-                }
                 break;
             case POG:
                 // Not implemented.
-                if (log.isInfoEnabled()) {
-                    log.info("POG received (NOT IMPLEMENTED). Remote: {}, Message: {}",
-                            conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
-                }
                 break;
             case EVT:
                 // TODO: Implement event system.
