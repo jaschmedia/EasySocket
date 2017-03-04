@@ -16,8 +16,23 @@ public class EasySocket {
      * The identifier of the protocol used.
      */
     String protocolName;
-    InetSocketAddress wsAddress; // the adress for the WebSocket server.
+    InetSocketAddress wsAddress; // the address for the WebSocket server.
 
+    public static void main(String[] args) {
+        EasySocket es = new EasySocket();
+        es.startServer();
+
+    }
+
+    public EasySocket() {
+
+    }
+
+    public void startServer() {
+        this.wsAddress = new InetSocketAddress("localhost", 8000);
+        this.wsS = new Server(this.wsAddress, "testabc");
+        this.wsS.start();
+    }
 
 
 }
