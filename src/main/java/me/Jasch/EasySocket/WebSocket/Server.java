@@ -1,5 +1,7 @@
 package me.Jasch.EasySocket.WebSocket;
 
+import me.Jasch.EasySocket.EasySocket;
+import me.Jasch.EasySocket.Event.EventHandler;
 import me.Jasch.EasySocket.Exceptions.*;
 import me.Jasch.EasySocket.Message.MType;
 import me.Jasch.EasySocket.Message.Message;
@@ -23,10 +25,12 @@ public class Server extends WebSocketServer {
     private static final Logger log = LoggerFactory.getLogger(Server.class); // logger instance
     public static HashMap<String, Connection> conns = new HashMap<>(); // connection, identified by their connection ID.
     private String protocolName;
+    private EventHandler handler;
 
-    public Server(InetSocketAddress adr, String protocolName) {
+    public Server(InetSocketAddress adr, String protocolName, EventHandler handler) {
         super(adr);
         this.protocolName = protocolName;
+        this.handler = handler;
         if (log.isDebugEnabled()) { log.debug("WebSocket server initialised."); }
     }
 
@@ -146,7 +150,12 @@ public class Server extends WebSocketServer {
                 // Not implemented.
                 break;
             case EVT:
-                // TODO: Implement event system.
+                if (this.handler.dispatchEvent(msg)) {
+                    // TODO: improve logging.
+                    log.debug("Dispatched event.");
+                } else {
+                    log.warn("Failed to dispatch event.");
+                }
                 break;
         }
 
@@ -155,5 +164,13 @@ public class Server extends WebSocketServer {
     @Override
     public void onError(WebSocket conn, Exception ex) {
         log.error("Apparently an error occurred: {}", ex);
+    }
+
+    /**
+     * Sends a message event to the client specified by the connection ID.
+     * @param msg The message.
+     */
+    public void sendMessage(Message msg) {
+        // TODO: implement.
     }
 }
