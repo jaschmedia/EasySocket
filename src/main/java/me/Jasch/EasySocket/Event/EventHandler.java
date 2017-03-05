@@ -1,7 +1,9 @@
 package me.Jasch.EasySocket.Event;
 
+import me.Jasch.EasySocket.Exceptions.UnknownConnectionIDException;
 import me.Jasch.EasySocket.Message.MType;
 import me.Jasch.EasySocket.Message.Message;
+import me.Jasch.EasySocket.WebSocket.WSUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,10 +45,16 @@ public class EventHandler {
      * Dispatches a new event.
      * @param msg The received message.
      * @return True if successfully dispatched the event, false if not.
+     * @throws UnknownConnectionIDException Thrown if the connection ID is unknown.
      */
     @NotNull
-    public boolean dispatchEvent(Message msg) {
+    public boolean dispatchEvent(Message msg) throws UnknownConnectionIDException {
         boolean dispatched = false;
+
+        if (!WSUtils.validCID(msg.cID)) {
+            throw new UnknownConnectionIDException();
+        }
+
         String id = msg.payload.split(":", 2)[0];
 
         if (events.containsKey(id)) {
@@ -63,9 +71,10 @@ public class EventHandler {
      * @param cID The connection ID of your target client.
      * @param payload The payload to send.
      * @return The message object or null if unable to create it.
+     * @throws UnknownConnectionIDException Thrown if the connection ID is unknown.
      */
     @Nullable
-    public Message createEventMessage(String id, String cID, Object payload) {
+    public Message createEventMessage(String id, String cID, Object payload) throws UnknownConnectionIDException {
         if (events.containsKey(id)) {
             IEvent event = events.get(id);
             return new Message(MType.EVT, cID, id + ":" + event.stringifyPayload(payload));

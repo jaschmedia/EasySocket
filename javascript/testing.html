@@ -3,9 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <script src="EasySocket.js"></script>
+    <script>
+        EasySocket.connect();
+        var testFunc = function (event) {
+            console.log("New event" + event);
+            // alert("OH SHITE MATE, THE SERVER KNOWS WHAT YOU DID!");
+            var ele = document.getElementById("test");
+            ele.innerText = "FUCK YEAH!";
+        };
+        EasySocket.registerEvent("test", testFunc);
+    </script>
 </head>
 <body>
-<script src="EasySocket.js"></script>
-<script>EasySocket.connect();</script>
+<span><h1 id="test"></h1></span>
+<button onclick="EasySocket.ws.send('EVT' + EasySocket.CIS + 'test:Button Pressed!');">TEST ME!</button>
 </body>
 </html>

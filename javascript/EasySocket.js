@@ -19,8 +19,9 @@
         // Important values for the library
         EasySocket.protocolName = "testabc"; // contains the protocol identifier.
         EasySocket.address = "ws://localhost:8000/ws"; // contains the address to connect to.
-        EasySocket.CIS = ""; // connection ID.
+        EasySocket.CIS = ""; // connection ID. NAMED INCORRECTLY BUT SCREW IT!
         EasySocket.connectionExists = false;
+        EasySocket.events = []; // store all events as {"id": "idstring", "handle": handle}
 
         /**
          * Creates the WebSocket connection.
@@ -100,11 +101,52 @@
                     EasySocket.connectionExists = false;
                     break;
                 case "EVT":
+                    var eventString = event.data.substring(11, event.data.length);
+                    var eventID = eventString.split(":")[0];
+                    var eventData = eventString.substring(eventID.length + 1, eventString.length);
+                    for (var i = 0; i < EasySocket.events.length; i++) {
+                        if (EasySocket.events[i].id === eventID) {
+                            EasySocket.events[i].handle(eventData);
+                        }
+                    }
                     break;
                 default:
                     break;
             }
         };
+
+        /**
+         * Adds a new event listener to the handler
+         * @param idstring ID for the event
+         * @param handleFunction Function to call for this event.
+         */
+        EasySocket.registerEvent = function (idstring, handleFunction) {
+            var alreadyExists = false;
+            for (var i = 0; i < EasySocket.events.length; i++) {
+                alreadyExists = (idstring === EasySocket.events[i].id) || alreadyExists;
+            }
+
+            if (!alreadyExists) {
+                EasySocket.events.push({
+                    "id": idstring,
+                    "handle": handleFunction,
+                })
+            }
+        };
+
+        /**
+         * Remove a registered event.
+         * @param idstring The ID of the event.
+         */
+        EasySocket.removeEvent = function (idstring) {
+            for (var i = 0; i < EasySocket.events.length; i++) {
+                if (EasySocket.events[i].id === idstring) {
+                    EasySocket.events.splice(i, 1);
+                }
+            }
+        };
+
+
 
 
         return EasySocket;

@@ -1,6 +1,5 @@
 package me.Jasch.EasySocket.WebSocket;
 
-import me.Jasch.EasySocket.EasySocket;
 import me.Jasch.EasySocket.Event.EventHandler;
 import me.Jasch.EasySocket.Exceptions.*;
 import me.Jasch.EasySocket.Message.MType;
@@ -27,6 +26,12 @@ public class Server extends WebSocketServer {
     private String protocolName;
     private EventHandler handler;
 
+    /**
+     * Creates a new WebSocket server
+     * @param adr The address to bind to.
+     * @param protocolName The used protocol name.
+     * @param handler The event handler.
+     */
     public Server(InetSocketAddress adr, String protocolName, EventHandler handler) {
         super(adr);
         this.protocolName = protocolName;
@@ -42,7 +47,13 @@ public class Server extends WebSocketServer {
         String cID = WSUtils.generateConnectionId();
         Connection cn = new Connection(cID, conn);
         conns.put(cID, cn);
-        Message msg = new Message(MType.CIS, cID);
+        Message msg = null;
+        try {
+            msg = new Message(MType.CIS, cID);
+        } catch (UnknownConnectionIDException e) {
+            // we can ignore this, this will never happen.
+            log.error("cID just pushed to conns isn't there!");
+        }
         conn.send(msg.toString());
         cn.setState(ConnectionState.CIDSENT);
     }
@@ -65,6 +76,12 @@ public class Server extends WebSocketServer {
             log.warn("Malformed message. Remote: {}, Message: {}",
                     conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
             // TODO: Deal with malformed message.
+            return;
+        } catch (UnknownConnectionIDException e) {
+            // apparently we do not know the other end.
+            // TODO: how to deal with this?
+            log.warn("Unknown connection ID. Remote: {}, Message: {}",
+                    conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
             return;
         }
 
@@ -102,43 +119,37 @@ public class Server extends WebSocketServer {
                 break;
             case ERR:
                 // TODO: improved error handling.
+                //<editor-fold desc="Close on error and remove from list.">
                 // Closes the WebSocket connection and removes it from the list.
-                Message sendMsg = new Message(MType.ERR, msg.cID, "GenericError");
-                conn.send(sendMsg.toString());
                 conn.close();
                 if (conns.containsKey(msg.cID)) {
                     conns.remove(msg.cID);
                 }
+                //</editor-fold>
                 break;
             case CIS:
-                try {
-                    if (WSUtils.checkCISInformation(msg)) {
-                        conns.get(msg.cID).setState(ConnectionState.CIDACK);
-                        WSUtils.sendProtocolInformation(conn, msg.cID, this.protocolName);
-                    } else {
-                        // TODO: more graceful handling of a failed CIS handshake.
-                        WSUtils.terminateConnection(conn);
-                    }
-                } catch ( UnknownConnectionIDException e) {
-                    WSUtils.terminateConnection(conn); // Terminate the connection and then quit.
-                    break;
+                //<editor-fold desc="Deal with CIS answer and dispatch PRT.">
+                if (WSUtils.checkCISInformation(msg)) {
+                    conns.get(msg.cID).setState(ConnectionState.CIDACK);
+                    WSUtils.sendProtocolInformation(conn, msg.cID, this.protocolName);
+                } else {
+                    // TODO: more graceful handling of a failed CIS handshake.
+                    WSUtils.terminateConnection(conn);
                 }
+                //</editor-fold>
                 break;
             case PRT:
-                try {
-                    if (WSUtils.checkPRTInformation(msg, this.protocolName)) {
-                        conns.get(msg.cID).setState(ConnectionState.PRTACK);
-                    } else {
-                        // TODO: more graceful handling of a failed PRT handshake.
-                        WSUtils.terminateConnection(conn, msg.cID);
-                        if (conns.containsKey(msg.cID)) {
-                            conns.remove(msg.cID);
-                        }
+                //<editor-fold desc="Deal with PRT answer.">
+                if (WSUtils.checkPRTInformation(msg, this.protocolName)) {
+                    conns.get(msg.cID).setState(ConnectionState.PRTACK);
+                } else {
+                    // TODO: more graceful handling of a failed PRT handshake.
+                    WSUtils.terminateConnection(conn, msg.cID);
+                    if (conns.containsKey(msg.cID)) {
+                        conns.remove(msg.cID);
                     }
-                } catch (NoConnectionIDException | UnknownConnectionIDException e) {
-                    WSUtils.terminateConnection(conn); // Terminate the connection and then quit.
-                    break;
                 }
+                //</editor-fold>
                 break;
             case RTL:
                 // Not implemented.
@@ -150,12 +161,24 @@ public class Server extends WebSocketServer {
                 // Not implemented.
                 break;
             case EVT:
-                if (this.handler.dispatchEvent(msg)) {
-                    // TODO: improve logging.
-                    log.debug("Dispatched event.");
-                } else {
-                    log.warn("Failed to dispatch event.");
+                //<editor-fold desc="Deal with received EVT and dispatch them.">
+                boolean eventDispatched = false;
+                try {
+                    eventDispatched = this.handler.dispatchEvent(msg);
+                } catch (UnknownConnectionIDException e) {
+                    log.warn("Invalid");
                 }
+                if (eventDispatched) {
+                    // TODO: improve logging.
+                    if (log.isDebugEnabled()) {
+                        log.debug("Event dispatched. Remote: {}, Message: {}",
+                                conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
+                    }
+                } else {
+                    log.warn("Event failed to dispatch. Remote: {}, Message: {}",
+                            conn.getRemoteSocketAddress().getAddress().getHostAddress(), message);
+                }
+                //</editor-fold>
                 break;
         }
 
@@ -171,6 +194,12 @@ public class Server extends WebSocketServer {
      * @param msg The message.
      */
     public void sendMessage(Message msg) {
-        // TODO: implement.
+        // TODO: implement this better.
+        if (log.isDebugEnabled()) {
+            log.debug("Sending message. Message: {}", msg.toString());
+        }
+        if (conns.containsKey(msg.cID)) {
+            conns.get(msg.cID).send(msg);
+        }
     }
 }

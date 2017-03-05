@@ -1,5 +1,6 @@
 package me.Jasch.EasySocket.WebSocket;
 
+import me.Jasch.EasySocket.Message.Message;
 import org.java_websocket.WebSocket;
 
 /**
@@ -33,5 +34,13 @@ public class Connection {
      */
     public ConnectionState getState() {
         return this.state;
+    }
+
+    /**
+     * Sends a message to the associated client.
+     * @param msg The message.
+     */
+    public void send(Message msg) {
+        this.ws.send(msg.toString());
     }
 }

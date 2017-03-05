@@ -1,5 +1,4 @@
-# Initial development (0.1.0-SNAPSHOT)
-**THIS DOCUMENT IS SUBJECT TO CHANGE**
+# Initial development (0.1.0)
 
 This is the initial development of EasySocket.
 
@@ -11,6 +10,7 @@ This is the initial development of EasySocket.
 * Connections (WIP)
 * Connections: connection ID system in place
 * Connections: protocol system (server) in place
+* Connections: event handling system
 
 ## Changed
 

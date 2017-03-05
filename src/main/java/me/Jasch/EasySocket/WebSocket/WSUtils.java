@@ -47,15 +47,24 @@ public class WSUtils {
     }
 
     /**
+     * Checks whether a connection ID is known.
+     * @param cID The connection ID to check.
+     * @return True if cID is known, false otherwise.
+     */
+    @NotNull
+    public static boolean validCID(String cID) {
+        return Server.conns.containsKey(cID);
+    }
+
+    /**
      * Checks the answer for a CIS message.
      * @param msg The received message.
      * @return True if the connection ID was set correctly, false otherwise.
-     * @throws UnknownConnectionIDException Thrown if the received connection ID is unknown.
      */
     @NotNull
-    public static Boolean checkCISInformation(Message msg) throws UnknownConnectionIDException {
+    public static Boolean checkCISInformation(Message msg) {
         // Return null if supplied cID is not known.
-        if (!Server.conns.containsKey(msg.cID)) { throw new UnknownConnectionIDException();}
+        // if (!Server.conns.containsKey(msg.cID)) { throw new UnknownConnectionIDException();}
 
         Connection c = Server.conns.get(msg.cID);
 
@@ -79,7 +88,12 @@ public class WSUtils {
      * @param cID The affected connection ID.
      */
     public static void terminateConnection(WebSocket ws, String cID) {
-        Message msg = new Message(MType.ERR, cID, "GenericError");
+        Message msg = null;
+        try {
+            msg = new Message(MType.ERR, cID, "GenericError");
+        } catch (UnknownConnectionIDException e) {
+            log.error("This should not happen!"); // TODO: better handle this!
+        }
         ws.send(msg.toString());
         ws.close();
         if (Server.conns.containsKey(cID)) {
@@ -94,7 +108,13 @@ public class WSUtils {
      * @param protocolName The protocol name.
      */
     public static void sendProtocolInformation(WebSocket ws, String cID, String protocolName) {
-        Message msg = new Message(MType.PRT, cID, protocolName);
+        Message msg = null;
+        try {
+            msg = new Message(MType.PRT, cID, protocolName);
+        } catch (UnknownConnectionIDException e) {
+            // This should never happen!
+            log.error("This should never happen!"); // TODO: handle this better!
+        }
         ws.send(msg.toString());
         if (Server.conns.containsKey(cID)) {
             Server.conns.get(cID).setState(ConnectionState.PRTSENT);
@@ -106,13 +126,11 @@ public class WSUtils {
      * @param msg The received message.
      * @param protocolName The expected protocol name.
      * @return True if the received protocol information matches the expected information.
-     * @throws UnknownConnectionIDException Thrown if the received connection ID is unknown.
      */
     @NotNull
-    public static Boolean checkPRTInformation(Message msg, String protocolName) throws
-            NoConnectionIDException, UnknownConnectionIDException {
+    public static Boolean checkPRTInformation(Message msg, String protocolName) {
         // Throw exception if connection ID is unknown.
-        if (!Server.conns.containsKey(msg.cID)) { throw new UnknownConnectionIDException(); }
+        // if (!Server.conns.containsKey(msg.cID)) { throw new UnknownConnectionIDException(); }
 
         Connection c = Server.conns.get(msg.cID);
 

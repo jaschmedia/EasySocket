@@ -2,6 +2,7 @@ package me.Jasch.EasySocket.Message;
 
 import me.Jasch.EasySocket.Exceptions.InvalidMTypeException;
 import me.Jasch.EasySocket.Exceptions.NoConnectionIDException;
+import me.Jasch.EasySocket.Exceptions.UnknownConnectionIDException;
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
 
@@ -22,9 +23,10 @@ public class MessageTest {
 
     /**
      * Test the creation of messages without a payload.
+     * @throws UnknownConnectionIDException This is expected to happen.
      */
-    @Test
-    public void createFromMtCid() {
+    @Test(expected= UnknownConnectionIDException.class)
+    public void createFromMtCid() throws UnknownConnectionIDException {
         String cID;
         String expect;
         for (MType mt : MType.values()) {
@@ -38,9 +40,10 @@ public class MessageTest {
 
     /**
      * Test the creation of messages with a payload.
+     * @throws UnknownConnectionIDException This is expected to happen.
      */
-    @Test
-    public void createFromMtCidPl() {
+    @Test(expected = UnknownConnectionIDException.class)
+    public void createFromMtCidPl() throws UnknownConnectionIDException {
         String cID;
         String payload;
         String expect;
@@ -61,9 +64,10 @@ public class MessageTest {
      * Test the creation of messages from a string.
      * @throws InvalidMTypeException Possible exception.
      * @throws NoConnectionIDException Possible exception.
+     * @throws UnknownConnectionIDException This is expected to happen.
      */
-    @Test
-    public void createFromString() throws InvalidMTypeException, NoConnectionIDException {
+    @Test(expected = UnknownConnectionIDException.class)
+    public void createFromString() throws InvalidMTypeException, NoConnectionIDException, UnknownConnectionIDException {
         String cID;
         String payload;
         String expect;
