@@ -17,7 +17,7 @@
         var EasySocket = {};
 
         // Important values for the library
-        EasySocket.protocolName = "testabc"; // contains the protocol identifier.
+        EasySocket.protocolName = ""; // contains the protocol identifier.
         EasySocket.address = "ws://localhost:8000/ws"; // contains the address to connect to.
         EasySocket.CIS = ""; // connection ID. NAMED INCORRECTLY BUT SCREW IT!
         EasySocket.connectionExists = false;

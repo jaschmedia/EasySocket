@@ -4,7 +4,7 @@
     <groupId>me.Jasch.EasySocket</groupId>
     <artifactId>EasySocket</artifactId>
     <packaging>jar</packaging>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <name>EasySocket</name>
     <description>A wrapper around WebSocket to simplify communication planned in other projects.</description>
     <url>https://github.com/jaschmedia/EasySocket</url>

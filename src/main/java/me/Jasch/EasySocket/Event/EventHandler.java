@@ -6,16 +6,20 @@ import me.Jasch.EasySocket.Message.Message;
 import me.Jasch.EasySocket.WebSocket.WSUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 
 /**
  * Handler for user created events.
  * @author jasch
- * @version 0.1.0
+ * @version 0.1.1
  * @since 0.1.0
  */
 public class EventHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(EventHandler.class); // logger instance
 
     private HashMap<String, IEvent> events = new HashMap<>();
 
@@ -38,6 +42,7 @@ public class EventHandler {
                 registered = true;
             }
         }
+        if (log.isDebugEnabled()) { log.debug("Registered event. ID: {}", id); }
         return registered;
     }
 
@@ -60,6 +65,10 @@ public class EventHandler {
         if (events.containsKey(id)) {
             events.get(id).handleEvent(msg);
             dispatched = true;
+
+            if (log.isDebugEnabled()) { log.debug("Event dispatched. ID: {}, CID: {}", id, msg.cID); }
+        } else {
+            log.info("Unknown event recieved. ID: {}, msg: {}", id, msg.toString());
         }
 
         return dispatched;
@@ -77,8 +86,11 @@ public class EventHandler {
     public Message createEventMessage(String id, String cID, Object payload) throws UnknownConnectionIDException {
         if (events.containsKey(id)) {
             IEvent event = events.get(id);
+            if (log.isDebugEnabled()) { log.debug("Event created. ID: {}, CID: {}", id, cID); }
+
             return new Message(MType.EVT, cID, id + ":" + event.stringifyPayload(payload));
         } else {
+            log.info("Tried to create unknown event. ID: {}, CID: {}", id, cID);
             return null;
         }
     }
